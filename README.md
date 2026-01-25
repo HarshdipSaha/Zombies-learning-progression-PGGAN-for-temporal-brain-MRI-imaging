@@ -22,7 +22,7 @@ This synthetic data augments limited real datasets to improve:
 ---
 <img width="791" height="553" alt="image" src="https://github.com/user-attachments/assets/06369b8c-01cc-41ba-8a46-8534b8d49dbf" />
 
-## 🔁 End-to-End Flow
+##  End-to-End Flow
 
 1. **Train GAN**  
    Train the Two-Generator PGGAN on preprocessed real MRI data from `CACHED128`.
@@ -45,16 +45,16 @@ This synthetic data augments limited real datasets to improve:
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
-### 🧬 Dual Generators
+###  Dual Generators
 - **G_B (Baseline Generator)**  
   Generates baseline MRI from latent vector `z`.
 
 - **G_F (Follow-Up Generator)**  
   Generates follow-up MRI from `(z + baseline features)` conditioned at all scales.
 
-### 🕵️ Dual Discriminators
+###  Dual Discriminators
 - **D_B** → Discriminator for baseline MRI  
 - **D_F** → Discriminator for follow-up MRI  
 - Trained using **WGAN-GP** for stability.
