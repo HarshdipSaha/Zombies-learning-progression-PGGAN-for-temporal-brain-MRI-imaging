@@ -59,7 +59,7 @@ This synthetic data augments limited real datasets to improve:
 - **D_F** → Discriminator for follow-up MRI  
 - Trained using **WGAN-GP** for stability.
 
-##Loss = Adversarial + λ₁·L1 + λ₂·SSIM
+### Loss = Adversarial + λ₁·L1 + λ₂·SSIM
 
 Ensures:
 - Anatomical consistency
