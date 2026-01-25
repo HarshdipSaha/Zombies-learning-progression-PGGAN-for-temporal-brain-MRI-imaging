@@ -4,8 +4,7 @@
 ---
 
 🔗 **Research Paper (Overleaf Project):**  
-https://www.overleaf.com/project/6975b410f92ea82df03b3625  
-
+https://www.overleaf.com/read/ympnckjqwkht#db481f
 ---
 
 ## Overview
@@ -174,6 +173,6 @@ Each .npz contains:
 Please cite this work if used in academic research.  
 Refer to the Overleaf project for the full paper:
 
-🔗 https://www.overleaf.com/project/6975b410f92ea82df03b3625
+🔗 https://www.overleaf.com/read/ympnckjqwkht#db481f
 
 
