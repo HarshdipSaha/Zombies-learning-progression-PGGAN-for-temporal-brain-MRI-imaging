@@ -1,228 +1,179 @@
-/*
-# Longitudinal Brain MRI Augmentation & Segmentation Pipeline
-
-> A Two-Generator PGGAN pipeline for synthetic longitudinal MRI generation, followed by 3D segmentation and RANO classification.
+# Longitudinal Brain MRI Augmentation & Segmentation Pipeline  
+*A Two-Generator PGGAN pipeline for synthetic longitudinal MRI generation, followed by 3D segmentation and RANO classification.*
 
 ---
 
-## Table of Contents
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Repository Structure](#repository-structure)
-- [Dataset Format](#dataset-format)
-- [Installation](#installation)
-- [Usage: End-to-End Pipeline](#usage-end-to-end-pipeline)
-- [Configuration](#configuration)
-- [Output Directory Guide](#output-directory-guide)
-- [Tips & Notes](#tips--notes)
-- [Contributing](#contributing)
-- [License & Citation](#license--citation)
-- [Contact](#contact)
+🔗 **Research Paper (Overleaf Project):**  
+https://www.overleaf.com/project/6975b410f92ea82df03b3625  
 
 ---
 
 ## Overview
 
-This project provides an end-to-end pipeline for augmenting **longitudinal brain MRI data** using a **Two-Generator Progressive GAN (PGGAN)**.
+This project provides an end-to-end pipeline for augmenting **longitudinal brain MRI data** using a  
+**Two-Generator Progressive GAN (PGGAN)**.
 
-The system generates anatomically consistent **baseline and follow-up** image pairs. This synthetic data is used to augment real, often limited, datasets to improve the performance of **3D segmentation** models and subsequent **RANO classification** models.
+The system generates anatomically consistent **baseline and follow-up** MRI image pairs.  
+This synthetic data augments limited real datasets to improve:
 
-### End-to-End Flow
+- 3D Tumor Segmentation  
+- RANO Classification Performance  
 
-1.  **Train GAN:** The Two-Generator PGGAN is trained on preprocessed real data (from `CACHED128`).
-2.  **Generate Data:** The trained GAN generates synthetic `.npz` files (baseline + follow-up pairs) and saves them (to `generated1070`).
-3.  **Train Segmentation:** A segmentation model (e.g., `CoTrSeg`, `nnU-Net`, or `DynUNet`) is trained on the real data.
-4.  **Run Inference:** The trained segmentation model is used to create segmentation masks for the newly generated synthetic data (results in `visualisation1DigitalImageAug`).
-5.  **Train Classifier:** A RANO classifier is trained on a combined dataset of both real and synthetic images (with their corresponding masks), often using SMOTE and radiomics features.
+---
+<img width="791" height="553" alt="image" src="https://github.com/user-attachments/assets/06369b8c-01cc-41ba-8a46-8534b8d49dbf" />
+
+## 🔁 End-to-End Flow
+
+1. **Train GAN**  
+   Train the Two-Generator PGGAN on preprocessed real MRI data from `CACHED128`.
+
+2. **Generate Synthetic Data**  
+   Use the trained GAN to generate synthetic baseline–follow-up pairs → saved in `generated1070`.
+
+3. **Train Segmentation Model**  
+   Train a 3D segmentation model (CoTrSeg / nnU-Net / DynUNet) on real MRI data.
+
+4. **Inference on Synthetic Data**  
+   Run the trained segmentation model on generated synthetic images → saved in `visualisation128aug`.
+
+5. **Train RANO Classifier**  
+   Train an XGBoost classifier using:
+   - Real + synthetic images  
+   - Corresponding segmentation masks  
+   - Radiomics features  
+   - SMOTE for class imbalance  
 
 ---
 
-## Key Features
+## ✨ Key Features
 
-* **Dual Generators:**
-    * `G_B`: Baseline generator (creates a baseline image from a latent vector `z`).
-    * `G_F`: Follow-up generator (creates a follow-up image from `z` + `baseline`). It is conditioned on the baseline image features at every scale to ensure consistency.
+### 🧬 Dual Generators
+- **G_B (Baseline Generator)**  
+  Generates baseline MRI from latent vector `z`.
 
-* **Dual Discriminators:**
-    * `D_B` and `D_F` are independent discriminators for baseline and follow-up images, trained with **WGAN-GP** for stability.
+- **G_F (Follow-Up Generator)**  
+  Generates follow-up MRI from `(z + baseline features)` conditioned at all scales.
 
-* **Hybrid Temporal Loss:**
-    * The follow-up generator uses a combined loss (`Adversarial + λ₁·L1 + λ₂·SSIM`) to enforce anatomical consistency between the baseline and follow-up images.
+### 🕵️ Dual Discriminators
+- **D_B** → Discriminator for baseline MRI  
+- **D_F** → Discriminator for follow-up MRI  
+- Trained using **WGAN-GP** for stability.
 
-* **3D Volume Support:**
-    * The entire pipeline is designed to work with 3D MRI volumes, specifically `128x128x128`.
+##Loss = Adversarial + λ₁·L1 + λ₂·SSIM
 
-* **Full Segmentation & Classification Pipeline:**
-    * Includes scripts for training transformer-based (CoTrSeg) or U-Net-style segmentation models.
-    * Includes a final classification script using an XGBoost classifier with radiomics features and SMOTE for class imbalance.
+Ensures:
+- Anatomical consistency
+- Temporal realism
 
 ---
 
-## Repository Structure
+###  3D Volume Support
+
+All processing is done on:
+
+128 × 128 × 128 3D MRI volumes
+
+---
+
+## 📁 Repository Structure
 
 ```bash
 pggan/
-├── config.py                 # Main configuration file for the GAN
-├── dataset.py                # Dataloader for GAN training
-├── networks.py               # PGGAN generator and discriminator models
-├── train.py                  # Main training script for the GAN
-├── generate.py               # Script to generate synthetic images from a checkpoint
-├── utils.py                  # Utility functions (losses, etc.)
+├── config.py
+├── dataset.py
+├── networks.py
+├── train.py
+├── generate.py
+├── utils.py
 │
-├── saved256/                 # Checkpoints and image samples from PGGAN training
+├── saved256/                     # Checkpoints & sample outputs
 │   ├── samples/
 │   └── checkpoint_XXXk.pth
 │
-├── generated1070/            # Output directory for generated synthetic .npz files
+├── generated1070/                # Generated synthetic .npz files
 │   ├── 0/
 │   ├── 1/
 │   └── ...
 │
-├── CACHED128/                # Preprocessed real dataset (10-channel .npz)
+├── CACHED128/                    # Preprocessed real dataset (10-channel .npz)
 │   ├── 0/
 │   ├── 1/
 │   └── ...
 │
-models_cotrseg/               # Saved weights from trained segmentation models
-visualisation1DigitalImageAug/          # Segmentation masks inferred on synthetic data
+models_cotrseg/
+visualisation128aug/
 │
-├── train_cotrseg.py          # Script to train the segmentation model
-├── dataset_seg_cotrseg.py    # Dataloader for segmentation
-├── model_cotrseg.py          # Segmentation model architecture
-├── train_classifier_radiomics.py # Script to train the final RANO classifier
+├── train_cotrseg.py
+├── dataset_seg_cotrseg.py
+├── model_cotrseg.py
+├── train_classifier_radiomics.py
 │
 ├── requirements.txt
 └── README.md
+```
+## 🧾 10-Channel `.npz` Mapping
 
-## 📂 Repository & Dataset Layout
-# 🧾 10-Channel .npz Mapping
-Each .npz contains a NumPy array 'vol' of shape (10, 128, 128, 128).
+Each `.npz` contains:
 
-| Index | Channel | Description |
-|:---|:---|:---|
-| 0 | Baseline T1 | |
-| 1 | Baseline T1ce | Used by GAN & segmentation |
-| 2 | Baseline T2 | |
-| 3 | Baseline FLAIR | |
-| 4 | Follow-Up T1 | |
-| 5 | Follow-Up T1ce | Used by GAN & segmentation |
-| 6 | Follow-Up T2 | |
-| 7 | Follow-Up FLAIR | |
-| 8 | Baseline Mask | 0: bg, 1: edema, 2: tumor |
-| 9 | Follow-Up Mask | 0: bg, 1: edema, 2: tumor |
+```python
+vol.shape = (10, 128, 128, 128)
+| Index | Channel          | Description                        |
+|------:|------------------|------------------------------------|
+| 0     | Baseline T1      |                                    |
+| 1     | Baseline T1ce    | Used by GAN & Segmentation         |
+| 2     | Baseline T2      |                                    |
+| 3     | Baseline FLAIR   |                                    |
+| 4     | Follow-Up T1     |                                    |
+| 5     | Follow-Up T1ce   | Used by GAN & Segmentation         |
+| 6     | Follow-Up T2     |                                    |
+| 7     | Follow-Up FLAIR  |                                    |
+| 8     | Baseline Mask    | 0:bg, 1:edema, 2:tumor             |
+| 9     | Follow-Up Mask   | 0:bg, 1:edema, 2:tumor             |
+```
+## 🚀Quick Start
 
----
-
-## 🚀 Quick Start
-
-### 1️⃣ Clone the Repository
+###  Install
 
 ```bash
 git clone <your-repo-url>
 cd <your-repo>
 
 python -m venv venv
-source venv/bin/activate # (Linux / macOS)
-# .\venv\Scripts\activate # (Windows)
+source venv/bin/activate      # Linux / macOS
+# .\venv\Scripts\activate     # Windows
 
 pip install -r requirements.txt
+```
+##  Pipeline Commands
 
-python pggan/train.py --config pggan/config.py \
---data_root pggan/CACHED128 \
---result_dir pggan/saved256 \
---image_size 128 \
---batch_size 4 \
---epochs 200000
+### 1️⃣ Train Two-Generator PGGAN
 
-Common Requirements
-•	python >= 3.8
-•	torch >= 1.10
-•	torchvision
-•	numpy
-•	scipy
-•	scikit-image
-•	tqdm
-•	pillow
-•	pyradiomics
-•	scikit-learn
-•	imbalanced-learn
-•	nibabel
-________________________________________
-🧪 Pipeline Commands
-🔹 Train the Two-Generator PGGAN
-Bash
-python pggan/train.py --config pggan/config.py \
---data_root pggan/CACHED128 \
---result_dir pggan/saved256 \
---image_size 128 \
---batch_size 4 \
---epochs 200000
-🔹 Generate Synthetic Dataset
-Bash
+```bash
+python pggan/train.py \
+  --config pggan/config.py \
+  --data_root pggan/CACHED128 \
+  --result_dir pggan/saved256 \
+  --image_size 128 \
+  --batch_size 4 \
+  --epochs 200000
+```
+### 2️⃣ Generate Synthetic Dataset
+
+```bash
 python pggan/generate.py \
---checkpoint pggan/saved256/checkpoint_XXXk.pth \
---out_dir pggan/generated1070 \
---n_samples 5000 \
---seed 42
-Each generated .npz contains (baseline_T1ce, followup_T1ce).
-🔹 Train Segmentation Model (CoTrSeg / nnU-Net style)
-Bash
-python train_cotrseg.py \
---data_root pggan/CACHED128 \
---out_dir models_cotrseg \
---folds 3 \
---epochs 400 \
---batch_size 1 \
---in_channels 4
-🔹 Inference on Synthetic Images
-Bash
-python model_infer.py \
---model models_cotrseg/best_fold.pth \
---input_dir pggan/generated1070 \
---out_dir visualisation128aug \
---sliding_window True
-🔹 Train Final Classifier (RANO)
-Bash
-python train_classifier_radiomics.py \
---data_dirs pggan/CACHED128 pggan/generated1070 \
---masks_dir visualisation128aug \
---out_model ranoclass_xgb.pkl
-________________________________________
-⚙️ Configuration
-Example from pggan/config.py:
-Python
-DATA_ROOT = 'pggan/CACHED128' # Real data (10-channel .npz)
-RESULT_DIR = 'pggan/saved256' # Checkpoints & samples
-GENERATED_DIR = 'pggan/generated1070'
-IMAGE_SIZE = 128
-NUM_CHANNELS = 1 # Each generator uses 1 channel (T1ce)
-LATENT_SIZE = 256
-BATCH_SIZE = 4
-LR = 1e-4
-LAMBDA_L1 = 10.0
-LAMBDA_SSIM = 1.0
-GP_LAMBDA = 10.0 # Gradient penalty (WGAN-GP)
-________________________________________
-📤 Output Folders Explained
-Folder	Description
-pggan/saved256/	Model checkpoints and sample PNGs
-pggan/generated1070/	Synthetic .npz (2-channel) files
-models_cotrseg/	Saved segmentation model weights
-visualisation128aug/	Segmentation outputs for synthetic images
-________________________________________
-💡 Tips & Notes
-•	⚠️ Naming mismatch: Folder saved256 contains 128×128×128 data (legacy name).
-•	🧹 Dataset sanity: dataset_seg_cotrseg.py filters empty masks to prevent NaN losses.
-•	⚙️ 3D SSIM: Ensure your SSIM function supports 3D tensors or compute slice-wise.
-•	🔁 Reproducibility: Set torch.manual_seed() and log all config values.
-•	⚡ GPU memory: Use batch_size=1 or mixed precision for 3D models.
-________________________________________
-🤝 Contributing
-1.	Fork this repository.
-2.	Create your feature branch:
-Bash
-git checkout -b feature/your-feature
-3.	Commit your changes.
-4.	Push and open a Pull Request 🚀
+  --checkpoint pggan/saved256/checkpoint_XXXk.pth \
+  --out_dir pggan/generated1070 \
+  --n_samples 5000 \
+  --seed 42
+```
+Each .npz contains:
+(baseline_T1ce, followup_T1ce)
+
+## 📜 License & Citation
+
+Please cite this work if used in academic research.  
+Refer to the Overleaf project for the full paper:
+
+🔗 https://www.overleaf.com/project/6975b410f92ea82df03b3625
 
 
