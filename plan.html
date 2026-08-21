@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trustworthy Longitudinal Generative AI — Project Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+  :root{
+    --paper:#FCFBF7; --ink:#16202A; --muted:#64748B; --faint:#8A94A0;
+    --hair:#E6E2D8; --hair2:#EFEDE6;
+    --safe:#0E7C6B; --warn:#B45309; --danger:#B42318; --idea:#6D28D9; --blue:#1D4ED8;
+    --safe-bg:#0e7c6b12; --warn-bg:#b4530910; --danger-bg:#b4231810; --idea-bg:#6d28d90f; --blue-bg:#1d4ed80d; --slate-bg:#64748b0f;
+    --display:"Fraunces",Georgia,serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.62;font-weight:400;}
+  .page{max-width:840px;margin:0 auto;padding:0 40px;}
+  p{margin:0 0 14px;}
+  h1,h2,h3,h4{font-family:var(--display);font-weight:600;line-height:1.14;letter-spacing:-.01em;color:#0d1620;}
+  strong{font-weight:600;color:#0b1c2b;}
+  em{font-style:italic;}
+  a{color:var(--blue);text-decoration:none;}
+  code,.mono{font-family:var(--mono);font-size:.86em;background:#1620270a;padding:.08em .34em;border-radius:4px;color:#0b3b34;}
+  sup{font-size:.7em;}
+  .cover{min-height:94vh;display:flex;flex-direction:column;justify-content:center;padding:0 40px;max-width:840px;margin:0 auto;}
+  .cover .kick{font-family:var(--mono);font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin:0 0 24px;}
+  .cover h1{font-size:clamp(32px,5.5vw,52px);font-weight:600;line-height:1.06;margin:0 0 20px;max-width:26ch;}
+  .cover h1 .q{color:var(--safe);} .cover h1 .e{color:var(--danger);}
+  .cover .sub{font-size:19px;color:#3a4653;max-width:56ch;margin:0 0 32px;line-height:1.5;}
+  .cover .meta{font-family:var(--mono);font-size:13px;color:var(--muted);line-height:1.9;border-top:1px solid var(--hair);padding-top:18px;}
+  .cover .meta b{color:var(--ink);font-weight:600;}
+  .chapter{padding-top:28px;border-top:2px solid var(--ink);margin-top:20px;}
+  .chapter .cn{font-family:var(--mono);font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--safe);font-weight:700;margin:0 0 8px;}
+  .chapter h2{font-size:clamp(24px,3.8vw,34px);margin:0 0 16px;max-width:28ch;}
+  h3{font-size:20.5px;margin:28px 0 10px;color:#0d1620;}
+  h4{font-size:16px;margin:20px 0 6px;font-family:var(--body);font-weight:700;color:#0b1c2b;}
+  .lede{font-size:17.5px;color:#33404d;line-height:1.55;margin-bottom:18px;}
+  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);}
+  ul,ol{margin:0 0 15px;padding-left:22px;} li{margin-bottom:7px;}
+  ul.tight li{margin-bottom:4px;}
+  .box{border:1px solid var(--hair);border-left-width:4px;border-radius:8px;padding:16px 18px;margin:20px 0;background:#fff;}
+  .box .bh{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin:0 0 9px;display:flex;align-items:center;gap:8px;}
+  .box p:last-child{margin-bottom:0;}
+  .box.def{border-left-color:var(--safe);background:var(--safe-bg);} .box.def .bh{color:var(--safe);}
+  .box.ex{border-left-color:var(--warn);background:var(--warn-bg);} .box.ex .bh{color:var(--warn);}
+  .box.intu{border-left-color:var(--idea);background:var(--idea-bg);} .box.intu .bh{color:var(--idea);}
+  .box.caveat{border-left-color:var(--danger);background:var(--danger-bg);} .box.caveat .bh{color:var(--danger);}
+  .box.vars{border-left-color:var(--muted);background:var(--slate-bg);} .box.vars .bh{color:var(--muted);}
+  .box.key{border-left-color:var(--blue);background:var(--blue-bg);} .box.key .bh{color:var(--blue);}
+  table.vartab{width:100%;border-collapse:collapse;font-size:14.5px;margin:4px 0 2px;}
+  table.vartab td{padding:5px 8px;vertical-align:top;border-bottom:1px solid var(--hair2);}
+  table.vartab td.sym{width:160px;font-family:var(--mono);color:#0b3b34;white-space:nowrap;font-size:13.5px;}
+  table.vartab tr:last-child td{border-bottom:none;}
+  table.tbl{width:100%;border-collapse:collapse;font-size:14px;margin:16px 0;}
+  table.tbl th{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;border-bottom:1.5px solid var(--hair);padding:7px 9px;}
+  table.tbl td{padding:7px 9px;border-bottom:1px solid var(--hair2);vertical-align:top;}
+  .eq{margin:16px 0;display:flex;align-items:center;gap:14px;justify-content:center;background:#fff;padding:12px 16px;border:1px solid var(--hair);border-radius:6px;}
+  .eq .body{flex:1;text-align:center;overflow-x:auto;font-size:16px;color:#0b3b34;}
+  .eq .body .katex{font-size:1.08em;}
+  .eq .body .katex-display{margin:0;}
+  .eq .num{font-family:var(--mono);font-size:12px;color:var(--faint);white-space:nowrap;}
+  .toc{margin:8px 0 0;}
+  .toc h2{font-family:var(--display);font-size:28px;margin:0 0 18px;}
+  .toc ol{list-style:none;padding:0;margin:0;counter-reset:c;}
+  .toc > ol > li{counter-increment:c;margin:0 0 6px;padding:8px 0;border-bottom:1px solid var(--hair2);display:flex;gap:12px;font-weight:600;}
+  .toc > ol > li::before{content:counter(c);font-family:var(--mono);color:var(--safe);font-weight:700;min-width:20px;}
+  .toc .sub{display:block;font-weight:400;color:var(--muted);font-size:14px;margin:3px 0 0 0;font-family:var(--body);}
+  .pull{font-family:var(--display);font-size:19.5px;line-height:1.4;color:#0d1620;border-left:3px solid var(--safe);padding:2px 0 2px 18px;margin:22px 0;font-weight:500;}
+  .flow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0;}
+  .flow .step{border:1px solid var(--hair);border-radius:8px;padding:15px;background:#fff;}
+  .flow .step .n{font-family:var(--mono);font-size:11px;color:var(--safe);letter-spacing:.12em;text-transform:uppercase;font-weight:700;}
+  .flow .step h4{margin:7px 0 5px;}
+  .paper-card{border:1px solid var(--hair);border-radius:10px;padding:18px;background:#fff;margin:18px 0;}
+  .paper-card .paper-name{font-family:var(--display);font-size:22px;font-weight:600;margin-bottom:6px;color:#0b1c2b;}
+  .paper-card .takeaway{font-size:16px;color:#263542;margin-bottom:0;}
+  .arrow{text-align:center;font-family:var(--mono);color:var(--faint);font-size:18px;margin:5px 0;}
+  .simple-table{width:100%;border-collapse:collapse;font-size:14px;margin:14px 0;}
+  .simple-table th{font-family:var(--mono);font-size:11px;text-transform:uppercase;color:var(--muted);text-align:left;border-bottom:1.5px solid var(--hair);padding:8px;}
+  .simple-table td{padding:9px 8px;border-bottom:1px solid var(--hair2);vertical-align:top;}
+  @media(max-width:650px){.flow{grid-template-columns:1fr;}.page,.cover{padding-left:20px;padding-right:20px;}}
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <p class="kick">Research & Technical Report · Longitudinal Medical AI</p>
+  <h1>Trustworthy Longitudinal Generative AI: <span class="q">From Base Papers to Dual-PGGAN Synthesis</span></h1>
+  <p class="sub">A complete architectural breakdown addressing Problem Statement 19. This document details the mathematical limitations of existing 2D and blending methods, analyzes the failure of multi-stage MUNIT/SimGAN refinement, and presents an end-to-end 3D Two-Generator PGGAN for longitudinal MRI synthesis with uncertainty estimation and spatial verification.</p>
+  <div class="meta">
+    <b>Problem Statement:</b> Problem Statement 19 — Trustworthy Generative AI with Verification and Uncertainty Estimation[cite: 4]<br>
+    <b>Core Task:</b> Paired 3D Longitudinal Brain MRI Synthesis ($\text{Baseline} \rightarrow \text{Follow-up}$)<br>
+    <b>Technical Foundation:</b> Progressive 3D Convolutions, Multi-Scale Feature Conditioning, WGAN-GP + SSIM Constraint[cite: 5, 8]
+  </div>
+</section>
+
+<section class="page" id="toc">
+  <div class="box key" style="margin-top:34px;">
+    <p class="bh">Executive Summary</p>
+    <p>Existing generative methods for medical imaging operate predominantly on isolated 2D slices[cite: 6] or static blending interpolations[cite: 7], completely failing to model biological disease progression over time. In our initial phase, cascading a 3D PGGAN with unsupervised refiners (MUNIT/SimGAN) produced catastrophic high-frequency blurring and anatomical collapse[cite: 5, 6]. We pivoted to an integrated <strong>Two-Generator, Two-Discriminator (2G-2D) 3D PGGAN</strong>[cite: 5]. By conditioning the follow-up generator directly on multi-scale baseline features and enforcing structural similarity ($\text{SSIM}$) constraints, our framework synthesizes anatomically consistent $128 \times 128 \times 128$ volumetric pairs, models disease progression uncertainty via stochastic latent sampling, and performs automated quality verification[cite: 4, 5].</p>
+  </div>
+
+  <div class="toc">
+    <h2>Document Roadmap</h2>
+    <ol>
+      <li><div>Problem Statement Formulation<span class="sub">Deconstructing Problem Statement 19 requirements: verification, uncertainty, and physical consistency[cite: 4].</span></div></li>
+      <li><div>Base Papers Analysis & Exact Literature Gaps<span class="sub">Deep dive into Han et al. (2019)[cite: 6], Wang et al. (2022)[cite: 7], and FutureGAN (2018)[cite: 8] with verbatim gap citations.</span></div></li>
+      <li><div>The Longitudinal 3D MRI Dataset (LUMIERE & CACHED128)<span class="sub">10-channel volumetric tensor construction ($128^3$), class distributions, and multi-modal alignment[cite: 5].</span></div></li>
+      <li><div>Phase 1 Approach & The Breakdown of Image-to-Image Refiners<span class="sub">The PGGAN + MUNIT / SimGAN + TensorMixup pipeline and why unsupervised translation failed[cite: 5, 6].</span></div></li>
+      <li><div>Phase 2 Approach: End-to-End Two-Generator 3D PGGAN<span class="sub">Architectural design of $G_B, G_F, D_B, D_F$, progressive alpha fade-in, and WGAN-GP + SSIM loss[cite: 5].</span></div></li>
+      <li><div>Fulfilling Trustworthy AI: Verification, Uncertainty & Explainability<span class="sub">Stochastic latent progression (multiple futures), automated QC filtering, and difference mapping[cite: 4, 5].</span></div></li>
+    </ol>
+  </div>
+</section>
+
+<section class="page chapter">
+  <p class="cn">Chapter 1</p>
+  <h2>Problem Statement Formulation</h2>
+  <p class="lede">Mapping the academic and clinical requirements of Problem Statement 19 to longitudinal medical imaging.</p>
+
+  <div class="box def">
+    <p class="bh">Formal Definition: Problem Statement 19</p>
+    <p><strong>Title:</strong> <em>Trustworthy Generative AI with Verification and Uncertainty Estimation</em>[cite: 4]</p>
+    <p><strong>Official Description:</strong> <em>“Current models often generate outputs without quantifying uncertainty, explaining their reasoning, or verifying factual and physical correctness. This lack of transparency reduces trust and increases the risk of hallucinations, misinformation, and unsafe decisions. A trustworthy generative AI framework should not only generate content but also estimate confidence, provide interpretable explanations, and verify factual, spatial, and physical consistency before presenting outputs.”</em>[cite: 4]</p>
+    <p><strong>Mandated Objectives:</strong></p>
+    <ul class="tight">
+      <li>Develop generative models that jointly predict uncertainty and provide interpretable explanations[cite: 4].</li>
+      <li>Incorporate mechanisms for verifying factual, spatial, and physical correctness before output generation[cite: 4].</li>
+      <li>Improve transparency, reliability, and trustworthiness in safety-critical domains[cite: 4].</li>
+    </ul>
+  </div>
+
+  <h3>Clinical Translation to Neuro-Oncology</h3>
+  <p>In glioblastoma monitoring, deep learning models must process longitudinal MRI scans across multiple timestamps: <strong>Baseline ($t_0$)</strong> and <strong>Follow-up ($t_1$)</strong>[cite: 5]. Standard generative models fail in clinical deployment due to three critical vulnerabilities:</p>
+  
+  <div class="flow">
+    <div class="step">
+      <div class="n">Vulnerability 1</div>
+      <h4>Deterministic Hallucination</h4>
+      <p>Standard GANs map noise to a single output, ignoring that a patient's glioblastoma progression has inherent biological stochasticity[cite: 5, 8].</p>
+    </div>
+    <div class="step">
+      <div class="n">Vulnerability 2</div>
+      <h4>Spatial & Physical Violation</h4>
+      <p>Unconstrained 2D generative models produce anatomical distortions, distorting rigid skull boundaries and violating mass-effect tissue continuity[cite: 5, 6].</p>
+    </div>
+  </div>
+
+  <div class="pull">“Our project fulfills Problem Statement 19 by engineering a 3D generative architecture that couples progressive volumetric synthesis with explicit physical boundary verification ($\text{SSIM}$ constraints) and stochastic progression modeling for uncertainty estimation[cite: 4, 5].”</div>
+</section>
+
+<section class="page chapter">
+  <p class="cn">Chapter 2</p>
+  <h2>Base Papers Analysis & Literature Gaps</h2>
+  <p class="lede">Examining the foundational literature, quoting exact citations, and identifying unresolved mathematical and structural limitations.</p>
+
+  <div class="paper-card">
+    <div class="paper-name">Base Paper 1: Han et al. (IEEE Access 2019)</div>
+    <p class="takeaway"><strong>Title:</strong> <em>Combining Noise-to-Image and Image-to-Image GANs: Brain MR Image Augmentation for Tumor Detection</em>[cite: 6]</p>
+  </div>
+
+  <h3>Methodology & Contributions</h3>
+  <p>Han et al. proposed a two-step generative data augmentation pipeline for brain MRI tumor detection[cite: 6]. Step 1 uses Progressive Growing of GANs (PGGAN) to synthesize $256 \times 256$ 2D slice images from Gaussian noise[cite: 6]. Step 2 uses Multimodal UNsupervised Image-to-image Translation (MUNIT)[cite: 6] or Simulated+Unsupervised GAN (SimGAN)[cite: 6] to refine the synthetic textures toward the real data distribution[cite: 6].</p>
+
+  <div class="box caveat">
+    <p class="bh">Exact Quoted Gaps & Limitations (Han et al., 2019)</p>
+    <ul>
+      <li><strong>2D Slice Limitation (Section III-B, Page 156968):</strong> <em>“...since tumor/non-tumor annotation in the BRATS 2016 dataset, based on 3D volumes, is highly incorrect/ambiguous on 2D slices, we exclude (i) tumor images tagged as non-tumor, (ii) non-tumor images tagged as tumor, (iii) borderline images...”</em>[cite: 6]. The method operates strictly on 2D axial slices ($256 \times 256$), discarding 3D spatial volumetric context[cite: 6].</li>
+      <li><strong>Visual Turing Failure & Artifacts (Section IV-A & IV-B, Page 156972):</strong> <em>“...for about 75% of cases, it successfully captures the T1c-specific texture... but, for the rest 25%, the generated images lack clear tumor/non-tumor features or contain unrealistic features (i.e., hyper-intensity, gray contours, and odd artifacts).”</em>[cite: 6].</li>
+      <li><strong>Clinical Diagnosis Gap (Section IV-D, Page 156974–156975):</strong> <em>“...the expert recognizes a considerable number of the mild/modest tumor images as non-tumor for both real/synthetic cases. It derives from clinical tumor diagnosis relying on a full 3D volume, instead of a single 2D slice.”</em>[cite: 6].</li>
+      <li><strong>Static Domain Only:</strong> The pipeline only generates static, single-timepoint slices and contains zero mathematical formulation for paired longitudinal transitions ($t_0 \rightarrow t_1$)[cite: 5, 6].</li>
+    </ul>
+  </div>
+
+  <div class="paper-card">
+    <div class="paper-name">Base Paper 2: Wang et al. (Computers in Biology and Medicine 2022)</div>
+    <p class="takeaway"><strong>Title:</strong> <em>A data augmentation method for fully automatic brain tumor segmentation (TensorMixup)</em>[cite: 7]</p>
+  </div>
+
+  <h3>Methodology & Contributions</h3>
+  <p>Wang et al. addressed extreme class imbalance and data scarcity in 3D brain tumor segmentation by proposing **TensorMixup**[cite: 7]. Instead of mixing entire images with a single scalar ratio, they extract $128 \times 128 \times 128$ voxel patches centered on tumor regions of interest (ROIs)[cite: 7]. They sample an independent mixing tensor $\Lambda \sim \text{Beta}(\alpha, \alpha)$ where each voxel pair receives an independent weight[cite: 7]:</p>
+
+  <div class="eq">
+    <div class="body">$$X = \Lambda \odot X_1 + (1 - \Lambda) \odot X_2$$</div>
+    <div class="num">(Eq. 6 in Wang et al.)[cite: 7]</div>
+  </div>
+
+  <p>They map $\Lambda$ to a 2D matrix $\Lambda^* = [\Lambda_v, \Lambda_v, \Lambda_v, \Lambda_v]$ (where $\Lambda_v = \text{vec}(\Lambda)$) to mix the one-hot encoded ground truth label matrices[cite: 7]:</p>
+
+  <div class="eq">
+    <div class="body">$$Y = \Lambda^* \odot Y_1 + (1 - \Lambda^*) \odot Y_2$$</div>
+    <div class="num">(Eq. 9 in Wang et al.)[cite: 7]</div>
+  </div>
+
+  <div class="box caveat">
+    <p class="bh">Exact Quoted Gaps & Limitations (Wang et al., 2022)</p>
+    <ul>
+      <li><strong>Convex Blending vs. Generative Distribution (Section 2.3.2.2, Page 4):</strong> TensorMixup performs convex linear combinations of existing patient patches[cite: 7]. It cannot synthesize out-of-distribution anatomical features or novel pathologies from a learned latent space[cite: 7].</li>
+      <li><strong>Topological Distortion (Section 3.3.3, Page 8):</strong> <em>“The reasons of low accuracies of CutMix, FMix and Tumor Mixup mainly include that the location information of tumors in original images was not considered. Thus the topological structures of tumors in synthetic images were destroyed.”</em>[cite: 7]. While TensorMixup improves over CutMix, voxel-wise blending still perturbs fine vascular and necrotic core boundaries[cite: 7].</li>
+      <li><strong>Lack of Temporal Progression:</strong> The framework is purely designed for static single-timepoint 3D segmentation, lacking any mechanism for paired follow-up synthesis[cite: 5, 7].</li>
+    </ul>
+  </div>
+
+  <div class="paper-card">
+    <div class="paper-name">Base Paper 3: Aigner & Körner (FutureGAN, arXiv 2018)</div>
+    <p class="takeaway"><strong>Title:</strong> <em>FutureGAN: Anticipating the Future Frames of Video Sequences using Spatio-Temporal 3D Convolutions in Progressively Growing GANs</em>[cite: 8]</p>
+  </div>
+
+  <h3>Methodology & Contributions</h3>
+  <p>Aigner & Körner introduced FutureGAN to predict future frame sequences conditioned on past frames using an encoder-decoder architecture operating entirely with spatio-temporal 3D convolutions[cite: 8]. They extended Karras et al.'s Progressive Growing (PGGAN)[cite: 8] to temporal sequences, progressively scaling resolution from $4 \times 4$ to $128 \times 128$ while stabilizing training via WGAN-GP with an epsilon penalty[cite: 8]:</p>
+
+  <div class="eq">
+    <div class="body">$$L_D = \mathbb{E}[D(\tilde{x})] - \mathbb{E}[D(x)] + \lambda_{\text{gp}} \mathbb{E}\left[(\|\nabla_{\hat{x}} D(\hat{x})\|_2 - 1)^2\right] + \epsilon \mathbb{E}\left[D(x)^2\right]$$</div>
+    <div class="num">(Eq. 1 in Aigner & Körner)[cite: 8]</div>
+  </div>
+
+  <div class="box caveat">
+    <p class="bh">Exact Quoted Gaps & Limitations (Aigner & Körner, 2018)</p>
+    <ul>
+      <li><strong>Dense Temporal Frame Assumption (Section 1, Page 2):</strong> FutureGAN relies on dense, continuous video frames (e.g., MovingMNIST, KTH Action at 25 fps, Cityscapes at 17 fps)[cite: 8]. It is designed for continuous optical flow and ego-motion, not sparse longitudinal clinical timestamps separated by 3–6 months[cite: 5, 8].</li>
+      <li><strong>Long-Term Blurring (Section 5, Page 9):</strong> <em>“...the predictions still appear plausible, although the frames tend to get blurrier for increasing numbers of time steps.”</em>[cite: 8]. Recursive frame feeding leads to rapid degradation without explicit structural boundary regularization[cite: 8].</li>
+      <li><strong>Modality Limitation:</strong> The architecture processes standard 2D+time video sequences and cannot natively handle 3D volumetric spatial tensors ($D \times H \times W$) across multiple co-registered MRI modalities (T1, T1c, T2, FLAIR)[cite: 5, 8].</li>
+    </ul>
+  </div>
+</section>
+
+<section class="page chapter">
+  <p class="cn">Chapter 3</p>
+  <h2>The Longitudinal 3D MRI Dataset (LUMIERE)</h2>
+  <p class="lede">Constructing high-dimensional 10-channel volumetric tensors for multi-modal brain oncology.</p>
+
+  <p>We utilize the longitudinal <strong>LUMIERE dataset</strong> (and preprocessed <code>CACHED128</code> repository archives), comprising multi-timepoint MRI scans of glioblastoma patients undergoing therapy[cite: 5]. Each patient case consists of two co-registered clinical timestamps ($t_0$: Baseline, $t_1$: Follow-up)[cite: 5].</p>
+
+  <h3>10-Channel Volumetric Tensor Structure</h3>
+  <p>To preserve cross-modality coherence and spatial alignment, each sample is assembled into a single unified 10-channel 3D tensor of shape <code>[10, 128, 128, 128]</code>[cite: 5]:</p>
+
+  <table class="vartab">
+    <tr><td class="sym">Channel 0 (Index 0)</td><td>Baseline T1-weighted MRI ($t_0$)[cite: 5]</td></tr>
+    <tr><td class="sym">Channel 1 (Index 1)</td><td>Baseline Contrast-Enhanced T1c MRI ($t_0$) — Primary tumor input[cite: 5]</td></tr>
+    <tr><td class="sym">Channel 2 (Index 2)</td><td>Baseline T2-weighted MRI ($t_0$)[cite: 5]</td></tr>
+    <tr><td class="sym">Channel 3 (Index 3)</td><td>Baseline FLAIR MRI ($t_0$)[cite: 5]</td></tr>
+    <tr><td class="sym">Channel 4 (Index 4)</td><td>Follow-up T1-weighted MRI ($t_1$)[cite: 5]</td></tr>
+    <tr><td class="sym">Channel 5 (Index 5)</td><td>Follow-up Contrast-Enhanced T1c MRI ($t_1$) — Primary tumor target[cite: 5]</td></tr>
+    <tr><td class="sym">Channel 6 (Index 6)</td><td>Follow-up T2-weighted MRI ($t_1$)[cite: 5]</td></tr>
+    <tr><td class="sym">Channel 7 (Index 7)</td><td>Follow-up FLAIR MRI ($t_1$)[cite: 5]</td></tr>
+    <tr><td class="sym">Channel 8 (Index 8)</td><td>Baseline Segmentation Mask (0: Background, 1: Edema, 2: Tumor Core)[cite: 5]</td></tr>
+    <tr><td class="sym">Channel 9 (Index 9)</td><td>Follow-up Segmentation Mask (0: Background, 1: Edema, 2: Tumor Core)[cite: 5]</td></tr>
+  </table>
+
+  <h3>Clinical Class Distribution (RANO Criteria)</h3>
+  <p>The patient dataset is partitioned by RANO (Response Assessment in Neuro-Oncology) progression classes[cite: 5]:</p>
+  <table class="simple-table">
+    <tr><th>Class</th><th>Clinical Definition</th><th>Patient Count[cite: 5]</th><th>Distribution Character</th></tr>
+    <tr><td><strong>Class 0</strong></td><td>Complete Response (CR)</td><td>27 patients[cite: 5]</td><td>Minority class[cite: 5]</td></tr>
+    <tr><td><strong>Class 1</strong></td><td>Partial Response (PR)</td><td>21 patients[cite: 5]</td><td>Extreme minority class[cite: 5]</td></tr>
+    <tr><td><strong>Class 2</strong></td><td>Stable Disease (SD)</td><td>86 patients[cite: 5]</td><td>Moderate class[cite: 5]</td></tr>
+    <tr><td><strong>Class 3</strong></td><td>Progressive Disease (PD)</td><td>231 patients[cite: 5]</td><td>Dominant majority class[cite: 5]</td></tr>
+  </table>
+
+  <div class="box intu">
+    <p class="bh">3D Volumetric Dimension Analysis</p>
+    <p>Raw clinical scans exhibit severe spatial resolution variance across scanners: minimum shape <code>(160, 30, 22)</code> to maximum shape <code>(640, 640, 512)</code>[cite: 5]. All volumes undergo N4ITK bias field correction, skull-stripping, Z-score intensity normalization, and uniform spatial resampling to <code>[128, 128, 128]</code> voxels[cite: 5, 7].</p>
+  </div>
+</section>
+
+<section class="page chapter">
+  <p class="cn">Chapter 4</p>
+  <h2>Phase 1 Approach & Breakdown of Image-to-Image Refiners</h2>
+  <p class="lede">Documenting our initial experimental pipeline, the cascading architecture, and the empirical failure of unsupervised translation.</p>
+
+  <h3>The Initial Proposed Pipeline</h3>
+  <p>Inspired directly by Han et al. (2019)[cite: 6] and Wang et al. (2022)[cite: 7], our initial Phase 1 framework attempted a multi-stage generation, refinement, and mixup strategy[cite: 5]:</p>
+
+  <div class="flow">
+    <div class="step">
+      <div class="n">Stage 1: PGGAN Generator</div>
+      <h4>Noise $\rightarrow$ 10-Channel Tensor</h4>
+      <p>A 3D PGGAN generated synthetic 10-channel tensors (8 MRI modalities + 2 segmentation masks) conditioned on class labels (0–3)[cite: 5].</p>
+    </div>
+    <div class="step">
+      <div class="n">Stage 2: MUNIT / SimGAN</div>
+      <h4>Image $\rightarrow$ Image Refinement</h4>
+      <p>An unsupervised refiner (MUNIT/SimGAN) polished the 8 image channels to reduce synthetic artifacts and fit real distributions[cite: 5, 6].</p>
+    </div>
+    <div class="step">
+      <div class="n">Stage 3: Automated QC</div>
+      <h4>Filtering & Clustering</h4>
+      <p>DenseNet feature extraction and K-Means++ clustering discarded low-quality synthetic volumes failing SSIM/FID thresholds[cite: 5, 6].</p>
+    </div>
+    <div class="step">
+      <div class="n">Stage 4: TensorMixup</div>
+      <h4>Data Blending & Multi-Task</h4>
+      <p>High-quality synthetic pools were augmented via TensorMixup within-class to train a multi-task 3D segmentation/classifier[cite: 5, 7].</p>
+    </div>
+  </div>
+
+  <h3>Why Phase 1 Failed Empirically</h3>
+  <p>When extending Han et al.'s 2D refinement methodology[cite: 6] to high-dimensional 3D tensors ($128 \times 128 \times 128$), the pipeline suffered severe structural breakdown[cite: 5]:</p>
+
+  <div class="box caveat">
+    <p class="bh">Failure Modes of 3D MUNIT / SimGAN Refinement</p>
+    <ul>
+      <li><strong>High-Frequency Smoothing & Gray Contours:</strong> The content/style disentanglement in 3D MUNIT failed to enforce rigid boundary constraints, creating artificial gray halos around ventricles and eroding necrotic tumor edges[cite: 5, 6].</li>
+      <li><strong>Mask-Image Spatial Desynchronization:</strong> Because the refiner only operated on the 8 image channels while bypassing the 2 mask channels[cite: 5], the refined tumor boundaries shifted spatially, causing the synthetic segmentation masks to misalign with the underlying images[cite: 5].</li>
+      <li><strong>Unstable Multi-Stage Optimization:</strong> Training four distinct neural modules sequentially (PGGAN $\rightarrow$ MUNIT $\rightarrow$ QC $\rightarrow$ Multi-task Net)[cite: 5] led to compounding error propagation, where artifacts from Stage 1 destabilized the Stage 2 latent style encoders[cite: 6].</li>
+    </ul>
+  </div>
+
+  <div class="pull">“Conclusion from Phase 1: Unsupervised image-to-image translation refiners (MUNIT/SimGAN) are fundamentally unsuited for 3D volumetric medical synthesis[cite: 5, 6]. Factual and physical consistency must be enforced end-to-end within the generative network itself[cite: 4, 5].”</div>
+</section>
+
+<section class="page chapter">
+  <p class="cn">Chapter 5</p>
+  <h2>Phase 2 Approach: End-to-End Two-Generator 3D PGGAN</h2>
+  <p class="lede">Our final architecture: specialized dual generators, multi-scale baseline conditioning, and unified spatio-temporal loss.</p>
+
+  <p>To overcome Phase 1 failures, we engineered the **Two-Generator Longitudinal PGGAN (2G-2D)** framework[cite: 5]. The architecture decouples baseline anatomical synthesis from longitudinal progression modeling[cite: 5].</p>
+
+  <div class="flow">
+    <div class="step">
+      <div class="n">Generator Baseline ($G_B$)</div>
+      <h4>$z_1 \rightarrow \text{Baseline MRI}$</h4>
+      <p>Generates realistic baseline 3D volume $[1, 128, 128, 128]$ from latent noise $z_1 \sim \mathcal{N}(0, I)$, learning static brain anatomy and initial tumor morphology[cite: 5].</p>
+    </div>
+    <div class="step">
+      <div class="n">Generator Follow-up ($G_F$)</div>
+      <h4>$(z_2, G_B) \rightarrow \text{Follow-up MRI}$</h4>
+      <p>Generates paired follow-up volume $[1, 128, 128, 128]$ conditioned explicitly on synthetic baseline feature representations concatenated at every progressive resolution stage[cite: 5].</p>
+    </div>
+    <div class="step">
+      <div class="n">Discriminator Baseline ($D_B$)</div>
+      <h4>Judges Static Realism</h4>
+      <p>Evaluates whether synthetic baseline scans match the true distribution of clinical pre-treatment MRIs ($p_{\text{real\_BL}}$)[cite: 5].</p>
+    </div>
+    <div class="step">
+      <div class="n">Discriminator Follow-up ($D_F$)</div>
+      <h4>Judges Temporal Progression</h4>
+      <p>Evaluates whether the transformed follow-up scan represents a clinically plausible longitudinal progression ($p_{\text{real\_FU}}$)[cite: 5].</p>
+    </div>
+  </div>
+
+  <h3>Multi-Scale Feature Conditioning Mechanics</h3>
+  <p>Unlike standard conditional GANs that only concatenate inputs at the first layer, $G_F$ receives baseline spatial feature maps at <strong>every resolution level</strong> ($4^3 \rightarrow 8^3 \rightarrow 16^3 \rightarrow 32^3 \rightarrow 64^3 \rightarrow 128^3$)[cite: 5]:</p>
+
+  <div class="box key">
+    <p class="bh">Mathematical Formulation: Progressive Resolution Alpha Fade-In</p>
+    <p>During resolution transition from stage $k-1$ (resolution $2^{k-1}$) to stage $k$ (resolution $2^k$), new convolutional layers are faded in smoothly using parameter $\alpha \in [0, 1]$[cite: 5]:</p>
+    <div class="eq">
+      <div class="body">$$x_{\text{out}} = (1 - \alpha) \cdot \text{Upsample}(x_{\text{conv}_{k-1}}) + \alpha \cdot \text{Conv}_k(x_{\text{conv}_{k-1}})$$</div>
+      <div class="num">[cite: 5, 8]</div>
+    </div>
+    <p>This prevents catastrophic gradient shock across the four simultaneous networks during 3D scaling[cite: 5, 8].</p>
+  </div>
+
+  <h3>Loss Formulation: Enforcing Physical Constraints</h3>
+  <p>To guarantee anatomical fidelity without external refiners, the optimization objective integrates Wasserstein adversarial loss with gradient penalty, pixel-wise $L_1$ alignment, and 3D Structural Similarity ($\text{SSIM}$)[cite: 5]:</p>
+
+  <div class="eq">
+    <div class="body">$$\mathcal{L}_{\text{Total}} = \mathcal{L}_{\text{WGAN-GP}}(G_B, G_F, D_B, D_F) + \lambda_1 \mathcal{L}_{L_1}(y_{\text{real\_FU}}, \tilde{y}_{\text{FU}}) + \lambda_2 \mathcal{L}_{\text{SSIM}}(y_{\text{real\_FU}}, \tilde{y}_{\text{FU}})$$</div>
+    <div class="num">[cite: 5]</div>
+  </div>
+
+  <p>Where the 3D $\text{SSIM}$ constraint measures luminance, contrast, and structural preservation across local volumetric windows[cite: 5]:</p>
+  <div class="eq">
+    <div class="body">$$\text{SSIM}(x, y) = \frac{(2\mu_x\mu_y + C_1)(2\sigma_{xy} + C_2)}{(\mu_x^2 + \mu_y^2 + C_1)(\sigma_x^2 + \sigma_y^2 + C_2)}$$</div>
+    <div class="num">[cite: 5, 7]</div>
+  </div>
+</section>
+
+<section class="page chapter">
+  <p class="cn">Chapter 6</p>
+  <h2>Fulfilling Trustworthy AI: Verification, Uncertainty & Explainability</h2>
+  <p class="lede">Demonstrating strict compliance with Problem Statement 19 requirements.</p>
+
+  <div class="flow">
+    <div class="step">
+      <div class="n">PS 19 Requirement 1</div>
+      <h4>Uncertainty Estimation</h4>
+      <p><strong>Method:</strong> Stochastic Latent Sampling ($z_2$). Locking baseline $G_B(z_1)$ and sampling multiple $z_2$ vectors generates diverse, plausible disease futures (growth, stability, shrinkage), quantifying predictive variance[cite: 4, 5].</p>
+    </div>
+    <div class="step">
+      <div class="n">PS 19 Requirement 2</div>
+      <h4>Spatial & Physical Verification</h4>
+      <p><strong>Method:</strong> Automated QC Filter. Every generated pair is evaluated via 3D $\text{SSIM} \ge 0.85$ and volumetric continuity checks to automatically reject anatomically collapsed samples before presentation[cite: 4, 5].</p>
+    </div>
+    <div class="step">
+      <div class="n">PS 19 Requirement 3</div>
+      <h4>Interpretable Explanations</h4>
+      <p><strong>Method:</strong> Voxel Difference Mapping. Generating $(\tilde{y}_{\text{FU}} - \tilde{y}_{\text{BL}})$ isolates exact localized pathology changes, proving the network modifies tumor mass without altering invariant brain anatomy[cite: 4, 5].</p>
+    </div>
+    <div class="step">
+      <div class="n">PS 19 Requirement 4</div>
+      <h4>Factual Reliability</h4>
+      <p><strong>Method:</strong> Downstream Diagnostic Utility. Synthetic longitudinal pairs directly support 3D tumor segmentation and RANO progression classification without dataset distortion[cite: 4, 5].</p>
+    </div>
+  </div>
+
+  <h3>Comprehensive Architectural Comparison</h3>
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Framework Dimension</th>
+        <th>Han et al. (2019)[cite: 6]</th>
+        <th>Wang et al. (2022)[cite: 7]</th>
+        <th>FutureGAN (2018)[cite: 8]</th>
+        <th>Our 2G-2D PGGAN[cite: 5]</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Input / Output Format</strong></td>
+        <td>2D Slices ($256 \times 256$)[cite: 6]</td>
+        <td>3D Patches ($128^3$)[cite: 7]</td>
+        <td>2D Video Frames ($128^2 \times T$)[cite: 8]</td>
+        <td><strong>3D Paired Volumes ($[2, 128^3]$)</strong>[cite: 5]</td>
+      </tr>
+      <tr>
+        <td><strong>Temporal Progression</strong></td>
+        <td>None (Static classes)[cite: 6]</td>
+        <td>None (Static patches)[cite: 7]</td>
+        <td>Dense optical video frames[cite: 8]</td>
+        <td><strong>Sparse Clinical Timestamps ($t_0 \rightarrow t_1$)</strong>[cite: 5]</td>
+      </tr>
+      <tr>
+        <td><strong>Generative Engine</strong></td>
+        <td>2D PGGAN + MUNIT[cite: 6]</td>
+        <td>None (Linear convex blending)[cite: 7]</td>
+        <td>Encoder-Decoder 3D PGGAN[cite: 8]</td>
+        <td><strong>Dual 3D PGGAN ($G_B + G_F$)</strong>[cite: 5]</td>
+      </tr>
+      <tr>
+        <td><strong>Uncertainty Modeling</strong></td>
+        <td>Absent[cite: 6]</td>
+        <td>Absent[cite: 7]</td>
+        <td>Absent (Deterministic past)[cite: 8]</td>
+        <td><strong>Stochastic Latent Seeds ($z_2$)</strong>[cite: 5]</td>
+      </tr>
+      <tr>
+        <td><strong>Physical Verification</strong></td>
+        <td>Post-hoc manual triage[cite: 6]</td>
+        <td>ROI bounding box margins[cite: 7]</td>
+        <td>None (Pixel-level WGAN)[cite: 8]</td>
+        <td><strong>Automated SSIM QC + Difference Maps</strong>[cite: 5]</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Summary of Engineering Achievement</h3>
+  <div class="pull">“By discarding fragile unsupervised refiners and uniting progressive 3D spatio-temporal convolutions with multi-scale feature conditioning, our Two-Generator PGGAN architecture provides a robust, physically verified, and uncertainty-aware foundation for longitudinal medical generative AI[cite: 4, 5, 8].”</div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "$", right: "$", display: false }
+      ],
+      throwOnError: false
+    });
+  });
+</script>
+</body>
+</html>
