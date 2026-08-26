@@ -21,6 +21,31 @@ This synthetic data augments limited real datasets to improve:
 ---
 <img width="791" height="553" alt="image" src="https://github.com/user-attachments/assets/06369b8c-01cc-41ba-8a46-8534b8d49dbf" />
 
+## How it works
+
+The code in this repository is the Two-Generator PGGAN stage (`config.py`, `dataset.py`, `networks.py`, `train.py`). `DualChannelDataset` reads channel 1 (baseline T1ce) and channel 5 (follow-up T1ce) from each 10-channel `.npz`, normalises each to [-1, 1] and resizes to the current progressive-growing resolution. `train.py` grows both generators and both discriminators stage by stage (WGAN-GP, `LAMBDA_GP = 10`), adds L1 + SSIM consistency between the generated baseline and follow-up (`--lambda_l1`, `--lambda_ssim`), and writes `checkpoint_<kimg>k.pth` files plus 3-plane sample grids to the result directory.
+
+```mermaid
+flowchart LR
+    NPZ["CACHED npz files (10 channels, class folders)"] --> DS["dataset.py DualChannelDataset (ch1 baseline T1ce, ch5 follow-up T1ce)"]
+    DS -->|"normalised, resized 3D pairs"| TR["train.py progressive training loop"]
+    CFG["config.py (resolution schedule, batch sizes, kimg)"] --> TR
+    Z["latent z"] --> GB["Generator_Baseline G_B"]
+    Z --> GF["Generator_Followup G_F"]
+    GB -->|"synthetic baseline"| GF
+    GB --> DB["Discriminator D_B (WGAN-GP)"]
+    GF --> DF["Discriminator D_F (WGAN-GP)"]
+    GF -->|"L1 + SSIM vs baseline"| LOSS["G_F loss = adv + lambda_L1 L1 + lambda_SSIM SSIM"]
+    DB --> TR
+    DF --> TR
+    LOSS --> TR
+    TR -->|"every SAVE_INTERVAL_KIMG"| CK["checkpoint_XXXk.pth + 3-plane samples"]
+```
+
+The downstream steps described below (synthetic-data generation, 3D segmentation training, RANO classification) are part of the wider project; their scripts (`generate.py`, `train_cotrseg.py`, `train_classifier_radiomics.py`, etc.) are not in this repository at the moment.
+
+---
+
 ##  End-to-End Flow
 
 1. **Train GAN**  
@@ -167,6 +192,12 @@ python pggan/generate.py \
 ```
 Each .npz contains:
 (baseline_T1ce, followup_T1ce)
+
+## Status
+
+- Files present here: `config.py`, `dataset.py`, `networks.py`, `train.py`, `plan.html`, and the reference paper PDF. `generate.py`, `utils.py`, `requirements.txt` and the segmentation / classifier scripts listed in the structure above are not yet committed.
+- `config.py` currently points at `DATA_ROOT = 'CACHED256'` with `IMAGE_SIZE = 256`; the README commands use 128. Adjust one or the other before training.
+- No tests.
 
 ## 📜 License & Citation
 
